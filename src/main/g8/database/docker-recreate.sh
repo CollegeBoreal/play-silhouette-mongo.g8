@@ -2,7 +2,7 @@
 function main {
 
 # DB connection settings
-local databaseName="play-silhouette-rest-mongo"
+local databaseName="play-silhouette-mongo"
 local hostAddress="localhost"
 local portNumber="27017"
 local scriptsFolder="/tmp"
