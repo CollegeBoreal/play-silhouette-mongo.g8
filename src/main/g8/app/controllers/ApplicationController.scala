@@ -8,12 +8,16 @@ import play.api.libs.json.Json
 import play.api.mvc._
 import utils.auth.DefaultEnv
 
+import play.api.Logger
+
 import scala.concurrent.Future
 
 @Api(value = "Example data")
 @Singleton
 class ApplicationController @Inject()(components: ControllerComponents,
                                       silhouette: Silhouette[DefaultEnv]) extends AbstractController(components) {
+
+  val logger: Logger = Logger(this.getClass)
 
   /**
     * Create an Action to render an HTML page with a welcome message.

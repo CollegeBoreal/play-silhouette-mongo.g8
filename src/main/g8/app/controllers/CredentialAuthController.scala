@@ -8,21 +8,21 @@ import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import com.mohiva.play.silhouette.api.util.{Clock, Credentials, PasswordHasherRegistry}
 import com.mohiva.play.silhouette.impl.exceptions.IdentityNotFoundException
 import com.mohiva.play.silhouette.impl.providers._
-import formatters.json.{CredentialFormat, Token}
+import daos.UserDAO
 import io.swagger.annotations.{Api, ApiImplicitParam, ApiImplicitParams, ApiOperation}
-import models.security.SignUp
+import models.EmailCredential
+import models.Token
 import play.api.Configuration
 import play.api.i18n.{I18nSupport, MessagesApi}
-import play.api.libs.json.Json
-import play.api.mvc.{AbstractController, ControllerComponents}
-import service.UserService
+import play.api.libs.json.{Json, OFormat}
+import play.api.mvc.{AbstractController, Action, ControllerComponents}
 import utils.auth.DefaultEnv
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Api(value = "Authentication")
-class CredentialsAuthController @Inject()(components: ControllerComponents,
-                                          userService: UserService,
+class CredentialAuthController @Inject()(components: ControllerComponents,
+                                          userService: UserDAO,
                                           configuration: Configuration,
                                           silhouette: Silhouette[DefaultEnv],
                                           clock: Clock,
@@ -32,24 +32,21 @@ class CredentialsAuthController @Inject()(components: ControllerComponents,
                                           messagesApi: MessagesApi)
                                          (implicit ex: ExecutionContext) extends AbstractController(components) with I18nSupport {
 
-  implicit val credentialFormat = CredentialFormat.restFormat
-
-  implicit val signUpFormat = Json.format[SignUp]
+  implicit val emailCredentialFormat: OFormat[EmailCredential] = EmailCredential.restFormat
 
   @ApiOperation(value = "Get authentication token", response = classOf[Token])
   @ApiImplicitParams(
     Array(
       new ApiImplicitParam(
-        value = "Credentials",
+        value = "EmailCredential",
         required = true,
-        dataType = "com.mohiva.play.silhouette.api.util.Credentials",
+        dataType = "models.EmailCredential",
         paramType = "body"
       )
     )
   )
-  def authenticate = Action.async(parse.json[Credentials]) { implicit request =>
-    val credentials =
-      Credentials(request.body.identifier, request.body.password)
+  def authenticate: Action[EmailCredential] = Action.async(parse.json[EmailCredential]) { implicit request =>
+    val credentials = Credentials(request.body.email, request.body.password)
     credentialsProvider
       .authenticate(credentials)
       .flatMap { loginInfo =>
