@@ -25,4 +25,4 @@ $ docker rm -f some-mongo
 
 ## Expected Result
 
-![alt tag](./Robo3T.png)
+![alt tag](./Robo3T_.png)
