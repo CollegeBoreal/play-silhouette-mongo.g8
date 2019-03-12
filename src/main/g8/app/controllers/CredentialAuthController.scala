@@ -15,7 +15,7 @@ import models.Token
 import play.api.Configuration
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.{Json, OFormat}
-import play.api.mvc.{AbstractController, Action, ControllerComponents}
+import play.api.mvc.{AbstractController, Action, ControllerComponents, Result}
 import utils.auth.DefaultEnv
 
 import scala.concurrent.{ExecutionContext, Future}
