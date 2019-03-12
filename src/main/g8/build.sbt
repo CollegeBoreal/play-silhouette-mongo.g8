@@ -1,4 +1,4 @@
-name := "play-silhouette-rest-mongo"
+name := "play-silhouette-mongo"
  
 version := "1.0" 
 
