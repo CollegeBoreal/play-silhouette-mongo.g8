@@ -47,45 +47,27 @@ class CredentialAuthController @Inject()(components: ControllerComponents,
   )
   def authenticate: Action[EmailCredential] = Action.async(parse.json[EmailCredential]) { implicit request =>
     val credentials = Credentials(request.body.email, request.body.password)
-    credentialsProvider
-      .authenticate(credentials)
-      .flatMap { loginInfo =>
-        userService.retrieve(loginInfo).flatMap {
+    val res = for {
+      loginInfo <- credentialsProvider.authenticate(credentials)
+      authenticator <- silhouette.env.authenticatorService.create(loginInfo)
+      token <- silhouette.env.authenticatorService.init(authenticator)
+      t <- userService.retrieve(loginInfo)
+    } yield {
+      val result: Result = Ok(Json.toJson(Token(token, expiresOn = authenticator.expirationDateTime)))
+      t match {
           case Some(user) if !user.activated =>
             Future.failed(new IdentityNotFoundException("Couldn't find user"))
           case Some(user) =>
-            val config = configuration.underlying
-            silhouette.env.authenticatorService
-              .create(loginInfo)
-              .map {
-                case authenticator => authenticator
-              }
-              .flatMap { authenticator =>
-                silhouette.env.eventBus.publish(LoginEvent(user, request))
-                silhouette.env.authenticatorService
-                  .init(authenticator)
-                  .flatMap { token =>
-                    silhouette.env.authenticatorService
-                      .embed(
-                        token,
-                        Ok(
-                          Json.toJson(
-                            Token(
-                              token,
-                              expiresOn = authenticator.expirationDateTime
-                            )
-                          )
-                        )
-                      )
-                  }
-              }
+                  silhouette.env.eventBus.publish(LoginEvent(user, request))
+                  silhouette.env.authenticatorService.embed(token, result)
           case None =>
             Future.failed(new IdentityNotFoundException("Couldn't find user"))
         }
-      }
-      .recover {
+      result
+    }
+    res recover {
         case _: ProviderException =>
           Forbidden
-      }
+    }
   }
 }
