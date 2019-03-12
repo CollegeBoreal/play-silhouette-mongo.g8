@@ -40,6 +40,13 @@ class ApplicationController @Inject()(components: ControllerComponents,
 
   @ApiOperation(value = "Get bad password value")
   def badPassword = silhouette.SecuredAction.async { implicit request =>
+    if (logger.isDebugEnabled) {
+      logger.debug("Displaying headers :-------------------------------------------------------------------")
+      val headers: Map[String, String] = request.headers.toSimpleMap
+      for ((k,v) <- headers) {
+        logger.debug(s"key: $"$"$k, value: $"$"$v")
+      }
+    }
     Future.successful(Ok(Json.obj("result" -> "qwerty1234")))
   }
 
