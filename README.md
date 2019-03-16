@@ -1,1 +1,1 @@
-# play-silhouette-mongo.g8
+# play-silhouette-reactive-mongo.g8
